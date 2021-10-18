@@ -18,4 +18,4 @@ struct TracerConfig {
 };
 // TracerConfig POD
 
-int LoadConfig(int argc, const char *argv[], TracerConfig &tc);
+int LoadConfig(int argc, char **argv, TracerConfig &tc);
