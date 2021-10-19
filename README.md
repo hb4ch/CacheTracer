@@ -5,7 +5,7 @@ A CacheTrace eats a sequence of memory trace and spits out cache utility.
 ## Prerequiste
 ### Ubuntu
 ```
-sudo apt install build-essential
+sudo apt install build-essential cmake
 ```
 
 ```

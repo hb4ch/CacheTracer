@@ -2,27 +2,23 @@
 #include <cstddef>
 #include <vector>
 
-#include "config.h"
 #include "cacheline.h"
+#include "config.h"
 
-#define LOG2(X) ((unsigned) (8*sizeof (unsigned long long) - __builtin_clzll((X)) - 1))
-
+#define LOG2(X)                                                                \
+    ((unsigned)(8 * sizeof(unsigned long long) - __builtin_clzll((X)) - 1))
 
 struct CacheSet {
     int nWay;
     std::vector<TaggedCacheLine> dir;
-    
-    CacheSet() {
 
-    }
+    CacheSet() {}
 
-    CacheSet(int nWayIn) 
-        : nWay(nWayIn), dir(nWay) 
-    { }
+    CacheSet(int nWayIn) : nWay(nWayIn), dir(nWay) {}
 };
 
 class Cache {
-private:
+  private:
     size_t totalSize_;
     CacheCoherenceProto proto_;
     int nWay_;
@@ -41,11 +37,12 @@ private:
     size_t bitsForSet;
     size_t bitsForTag;
     // calculated
-public:
-    Cache(int totalSize, CacheCoherenceProto proto, int nWay, int totalSets, int lineSize, int addrLen)
-        : totalSize_(totalSize), lineSize_(lineSize), proto_(proto), nWay_(nWay), totalSets_(totalSets), addrLen_(addrLen),
-          sets(totalSets), nextLevelCache(nullptr)
-    {
+  public:
+    Cache(int totalSize, CacheCoherenceProto proto, int nWay, int totalSets,
+          int lineSize, int addrLen)
+        : totalSize_(totalSize), lineSize_(lineSize), proto_(proto),
+          nWay_(nWay), totalSets_(totalSets), addrLen_(addrLen),
+          sets(totalSets), nextLevelCache(nullptr) {
         totalCacheLines = totalSize / lineSize;
         linesPerWay = totalCacheLines / nWay;
         bitsForOffset = LOG2(lineSize);
