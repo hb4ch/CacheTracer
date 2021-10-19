@@ -24,8 +24,106 @@ void Cache::printInfo() {
               << std::endl;
 }
 
-void Cache::put(TaggedCacheLine line) {}
+void Cache::put(uint64_t addr) {
+    uint64_t addrCopy = addr;
+    uint64_t offsetMask = (1u << (bitsForOffset)) - 1;
+    uint64_t offset = addr & offsetMask;
+    addr = addr >> bitsForOffset;
 
-void Cache::read(uint64_t addr) {}
+    uint64_t setMask = (1u << (bitsForSet)) - 1;
+    uint64_t set = addr & setMask;
+    addr = addr >> bitsForSet;
+
+    uint64_t tagMask = (1u << (bitsForTag)) - 1;
+    uint64_t tag = addr & tagMask;
+
+    CacheSet &hitSet = sets.at(set);
+
+    for (int i = 0; i < hitSet.entryNum; i++) {
+        TaggedCacheLine &cl = hitSet.dir[i];
+        if (!cl.getIsEmpty() && cl.getTag().tag == tag) {
+            cl.setTag({CacheLineState::MODIFIED, tag});
+            cl.setLastUseTime(timeStamp_);
+            // TODO: Snoop bus for other cores
+            return;
+        }
+    }
+    // Find first empty and put
+    for (TaggedCacheLine &cl : hitSet.dir) {
+        if (cl.getIsEmpty()) {
+            cl.setTag({CacheLineState::EXCLUSIVE, tag});
+            cl.setBirthTime(timeStamp_);
+            cl.setLastUseTime(timeStamp_);
+            cl.setEmpty(false);
+            return;
+        }
+    }
+    // There is no empty slots, now we need to evict least recently used.
+    int victimEntry = 0;
+    uint32_t leastUsedTime = UINT32_MAX;
+    for (int i = 0; i < hitSet.entryNum; i++) {
+        TaggedCacheLine &cl = hitSet.dir[i];
+        if (!cl.getIsEmpty()) {
+            if (cl.getLastUseTime() < leastUsedTime) {
+                victimEntry = i;
+                leastUsedTime = cl.getLastUseTime();
+            }
+        }
+    }
+    TaggedCacheLine victim = hitSet.dir[victimEntry];
+    hitSet.dir[victimEntry].setTag({CacheLineState::EXCLUSIVE, tag});
+    if (nextLevelCache) {
+        nextLevelCache->put(addrCopy);
+    }
+}
+
+void Cache::read(uint64_t addr) {
+    uint64_t addrCopy = addr;
+    uint64_t offsetMask = (1u << (bitsForOffset)) - 1;
+    uint64_t offset = addr & offsetMask;
+    addr = addr >> bitsForOffset;
+
+    uint64_t setMask = (1u << (bitsForSet)) - 1;
+    uint64_t set = addr & setMask;
+    addr = addr >> bitsForSet;
+
+    uint64_t tagMask = (1u << (bitsForTag)) - 1;
+    uint64_t tag = addr & tagMask;
+
+    CacheSet &hitSet = sets[set];
+    for (TaggedCacheLine &cl : hitSet.dir) {
+        if (cl.getTag().tag == tag) {
+            cl.setLastUseTime(timeStamp_);
+            return;
+        }
+    }
+    // Find first empty and put
+    for (TaggedCacheLine &cl : hitSet.dir) {
+        if (cl.getIsEmpty()) {
+            cl.setTag({CacheLineState::EXCLUSIVE, tag});
+            cl.setBirthTime(timeStamp_);
+            cl.setLastUseTime(timeStamp_);
+            cl.setEmpty(false);
+            return;
+        }
+    }
+    // none empty, evict
+    int victimEntry = 0;
+    uint32_t leastUsedTime = UINT32_MAX;
+    for (int i = 0; i < hitSet.entryNum; i++) {
+        TaggedCacheLine &cl = hitSet.dir[i];
+        if (!cl.getIsEmpty()) {
+            if (cl.getLastUseTime() < leastUsedTime) {
+                victimEntry = i;
+                leastUsedTime = cl.getLastUseTime();
+            }
+        }
+    }
+    TaggedCacheLine victim = hitSet.dir[victimEntry];
+    hitSet.dir[victimEntry].setTag({CacheLineState::EXCLUSIVE, tag});
+    if (nextLevelCache) {
+        nextLevelCache->put(addrCopy);
+    }
+}
 
 void Cache::evict(int dir, int offset) {}

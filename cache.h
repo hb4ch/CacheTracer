@@ -1,7 +1,7 @@
 #pragma once
 #include <cstddef>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <vector>
 
 #include "cacheline.h"
@@ -14,9 +14,11 @@ struct CacheSet {
     int nWay;
     std::vector<TaggedCacheLine> dir;
 
+    int entryNum;
+    int currEmpty;
     CacheSet() {}
 
-    CacheSet(int nWayIn) : nWay(nWayIn), dir(nWay) {}
+    CacheSet(int nWayIn) : nWay(nWayIn), dir(nWay), entryNum(0), currEmpty(0) {}
 };
 
 class Cache {
@@ -39,24 +41,26 @@ class Cache {
     size_t bitsForSet;
     size_t bitsForTag;
     // calculated
+
+    size_t timeStamp_;
+
   public:
     Cache(int totalSize, CacheCoherenceProto proto, int nWay, int totalSets,
           int lineSize, int addrLen)
         : totalSize_(totalSize), lineSize_(lineSize), proto_(proto),
           nWay_(nWay), totalSets_(totalSets), addrLen_(addrLen),
-          sets(totalSets), nextLevelCache(nullptr) {
+          sets(totalSets), nextLevelCache(nullptr), timeStamp_(0) {
         totalCacheLines = totalSize / lineSize;
         linesPerWay = totalCacheLines / nWay;
         bitsForOffset = LOG2(lineSize);
         bitsForSet = LOG2(totalSets_);
         bitsForTag = addrLen - bitsForOffset - bitsForSet;
     }
-    void setNextLevel(Cache *cache) {
-        nextLevelCache = cache;
-    }
+    void setNextLevel(Cache *cache) { nextLevelCache = cache; }
 
+    void incTime() { timeStamp_++; }
     void printInfo();
-    void put(TaggedCacheLine line);
+    void put(uint64_t addr);
     void read(uint64_t addr);
     void evict(int dir, int offset);
 };

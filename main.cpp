@@ -14,7 +14,6 @@ using std::endl;
 int main(int argc, char **argv) {
     TracerConfig tc;
     if (LoadConfig(argc, argv, tc)) {
-        std::cerr << "Error loading cache config!" << std::endl;
         return -1;
     }
     cout << tc.l1Size << " " << tc.l2Size << " " << tc.l3Size << " " << endl;
@@ -33,14 +32,14 @@ int main(int argc, char **argv) {
     l1Cache.setNextLevel(&l2Cache);
     l2Cache.setNextLevel(&l3Cache);
 
-    cout << "L1 info: \n";
-    l1Cache.printInfo();
-    cout << "---------------------------------\n";
-    cout << "L2 info: \n";
-    l2Cache.printInfo();
-    cout << "---------------------------------\n";
-    cout << "L3 info: \n";
-    l3Cache.printInfo();
+    // cout << "L1 info: \n";
+    // l1Cache.printInfo();
+    // cout << "---------------------------------\n";
+    // cout << "L2 info: \n";
+    // l2Cache.printInfo();
+    // cout << "---------------------------------\n";
+    // cout << "L3 info: \n";
+    // l3Cache.printInfo();
 
     return 0;
 }
