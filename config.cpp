@@ -7,12 +7,13 @@
 #include <string>
 #include <cstdlib>
 #include <unistd.h>
+
 int LoadConfig(int argc, char **argv, TracerConfig &tc) {
     int c;
     int cFlag = 0;  // config file flag
     int tFlag = 0;  // trace file flag
     std::string configFile;
-    std::string traceFile;
+
     while ((c = getopt(argc, argv, "c:t:")) != -1) {
         switch (c) {
             case 'c':
@@ -21,7 +22,7 @@ int LoadConfig(int argc, char **argv, TracerConfig &tc) {
                 break;
             case 't':
                 tFlag = 1;
-                traceFile = std::string(optarg);
+                tc.traceFile = std::string(optarg);
                 break;
             case '?':
                 if (optopt == 'c') {
@@ -43,14 +44,16 @@ int LoadConfig(int argc, char **argv, TracerConfig &tc) {
 
     if (!cFlag) {
         tc.nWay = 8;
-        tc.levelOneSize = 64 * KB;
-        tc.levelTwoSize = 256 * KB;
-        tc.levelThreeSize = 2 * MB;
+        tc.l1Size = 64 * KB;
+        tc.l2Size = 256 * KB;
+        tc.l3Size = 2 * MB;
+        tc.addrLen = 36;
+        tc.lineSize = 64;
     } else {
         try {
             std::fstream fs(configFile);
-            fs >> tc.nWay >> tc.levelOneSize >> tc.levelTwoSize >>
-                tc.levelThreeSize;
+            fs >> tc.nWay >> tc.l1Size >> tc.l2Size >>
+                tc.l3Size >> tc.addrLen >> tc.lineSize;
         } catch (const std::exception & e) {
             std::cerr << "Error reading config File!" << std::endl;
             return 1;
