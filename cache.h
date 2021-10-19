@@ -1,5 +1,7 @@
 #pragma once
 #include <cstddef>
+#include <iostream>
+#include <iomanip>
 #include <vector>
 
 #include "cacheline.h"
@@ -49,7 +51,11 @@ class Cache {
         bitsForSet = LOG2(totalSets_);
         bitsForTag = addrLen - bitsForOffset - bitsForSet;
     }
+    void setNextLevel(Cache *cache) {
+        nextLevelCache = cache;
+    }
 
+    void printInfo();
     void put(TaggedCacheLine line);
     void read(uint64_t addr);
     void evict(int dir, int offset);
