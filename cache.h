@@ -16,7 +16,7 @@ struct CacheSet {
 
     int entryNum;
     int currEmpty;
-    CacheSet() {}
+    // CacheSet() {}
 
     CacheSet(int nWayIn) : nWay(nWayIn), dir(nWay), entryNum(0), currEmpty(0) {}
 };
@@ -49,7 +49,7 @@ class Cache {
           int lineSize, int addrLen)
         : totalSize_(totalSize), lineSize_(lineSize), proto_(proto),
           nWay_(nWay), totalSets_(totalSets), addrLen_(addrLen),
-          sets(totalSets), nextLevelCache(nullptr), timeStamp_(0) {
+          sets(totalSets, nWay), nextLevelCache(nullptr), timeStamp_(0) {
         totalCacheLines = totalSize / lineSize;
         linesPerWay = totalCacheLines / nWay;
         bitsForOffset = LOG2(lineSize);
@@ -58,9 +58,9 @@ class Cache {
     }
     void setNextLevel(Cache *cache) { nextLevelCache = cache; }
 
-    void incTime() { timeStamp_++; }
-    void printInfo();
-    void put(uint64_t addr);
-    void read(uint64_t addr);
-    void evict(int dir, int offset);
+    void IncTime() { timeStamp_++; }
+    void PrintInfo();
+    void Put(uint64_t addr);
+    void Read(uint64_t addr);
+    void Invalidate(uint64_t addr);
 };

@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <iostream>
 
-void Cache::printInfo() {
+void Cache::PrintInfo() {
     std::cout << "Cache Info: \n"
               << std::setw(20) << std::left
               << "Total Cache lines: " << totalCacheLines << "\n"
@@ -24,7 +24,7 @@ void Cache::printInfo() {
               << std::endl;
 }
 
-void Cache::put(uint64_t addr) {
+void Cache::Put(uint64_t addr) {
     uint64_t addrCopy = addr;
     uint64_t offsetMask = (1u << (bitsForOffset)) - 1;
     uint64_t offset = addr & offsetMask;
@@ -73,11 +73,11 @@ void Cache::put(uint64_t addr) {
     TaggedCacheLine victim = hitSet.dir[victimEntry];
     hitSet.dir[victimEntry].setTag({CacheLineState::EXCLUSIVE, tag});
     if (nextLevelCache) {
-        nextLevelCache->put(addrCopy);
+        nextLevelCache->Put(addrCopy);
     }
 }
 
-void Cache::read(uint64_t addr) {
+void Cache::Read(uint64_t addr) {
     uint64_t addrCopy = addr;
     uint64_t offsetMask = (1u << (bitsForOffset)) - 1;
     uint64_t offset = addr & offsetMask;
@@ -122,8 +122,29 @@ void Cache::read(uint64_t addr) {
     TaggedCacheLine victim = hitSet.dir[victimEntry];
     hitSet.dir[victimEntry].setTag({CacheLineState::EXCLUSIVE, tag});
     if (nextLevelCache) {
-        nextLevelCache->put(addrCopy);
+        nextLevelCache->Put(addrCopy);
     }
 }
 
-void Cache::evict(int dir, int offset) {}
+void Cache::Invalidate(uint64_t addr) {
+    uint64_t addrCopy = addr;
+    uint64_t offsetMask = (1u << (bitsForOffset)) - 1;
+    uint64_t offset = addr & offsetMask;
+    addr = addr >> bitsForOffset;
+
+    uint64_t setMask = (1u << (bitsForSet)) - 1;
+    uint64_t set = addr & setMask;
+    addr = addr >> bitsForSet;
+
+    uint64_t tagMask = (1u << (bitsForTag)) - 1;
+    uint64_t tag = addr & tagMask;
+
+    CacheSet &hitSet = sets[set];
+    for (TaggedCacheLine &cl : hitSet.dir) {
+        if (cl.getTag().tag == tag) {
+            cl.setEmpty(true);
+            cl.setTag({CacheLineState::INVALID, tag});
+            return;
+        }
+    }
+}

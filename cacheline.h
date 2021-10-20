@@ -21,7 +21,7 @@ class TaggedCacheLine {
   public:
     TaggedCacheLine()
         : usedSize_(0), birthTime_(0), lastUseTime_(0), lineSize_(64),
-          isEmpty_(true), tag_({CacheLineState::SHARED, 0}) {}
+          isEmpty_(true), tag_({CacheLineState::INVALID, 0}) {}
     TaggedCacheLine(size_t usedSize, uint32_t birthTime, size_t lineSize,
                     Tag tag)
         : usedSize_(usedSize), birthTime_(birthTime), lastUseTime_(birthTime),
