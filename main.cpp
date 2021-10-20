@@ -32,14 +32,24 @@ int main(int argc, char **argv) {
     l1Cache.setNextLevel(&l2Cache);
     l2Cache.setNextLevel(&l3Cache);
 
+    Processor processor(&l1Cache, &l2Cache, &l3Cache);
+    SnoopBus bus;
+    bus.AddProcessor(&processor);
+    processor.setBus(&bus);
+    
+    l1Cache.setBus(&bus);
+    l2Cache.setBus(&bus);
+    l3Cache.setBus(&bus);
+   
+    // Now we are set...
     // cout << "L1 info: \n";
-    // l1Cache.printInfo();
+    // l1Cache.PrintInfo();
     // cout << "---------------------------------\n";
     // cout << "L2 info: \n";
-    // l2Cache.printInfo();
+    // l2Cache.PrintInfo();
     // cout << "---------------------------------\n";
     // cout << "L3 info: \n";
-    // l3Cache.printInfo();
+    // l3Cache.PrintInfo();
 
     return 0;
 }

@@ -45,6 +45,7 @@ void Cache::Put(uint64_t addr) {
             cl.setTag({CacheLineState::MODIFIED, tag});
             cl.setLastUseTime(timeStamp_);
             // TODO: Snoop bus for other cores
+            bus_->SendMessage(BusMessage::BUSUPGR, addrCopy);
             return;
         }
     }
@@ -124,6 +125,7 @@ void Cache::Read(uint64_t addr) {
     if (nextLevelCache) {
         nextLevelCache->Put(addrCopy);
     }
+    
 }
 
 void Cache::Invalidate(uint64_t addr) {
@@ -147,4 +149,12 @@ void Cache::Invalidate(uint64_t addr) {
             return;
         }
     }
+}
+
+void Processor::ProcessorRead(uint64_t addr) {
+
+}
+
+void Processor::ProcessorWrite(uint64_t addr) {
+
 }

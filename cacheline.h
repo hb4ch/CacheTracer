@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdlib>
+#include "operation.h"
 
 enum class CacheLineState { MODIFIED, EXCLUSIVE, SHARED, INVALID };
 
@@ -19,6 +20,9 @@ class TaggedCacheLine {
     Tag tag_;
 
   public:
+
+    void CacheLineStateTrans(Operation op);
+
     TaggedCacheLine()
         : usedSize_(0), birthTime_(0), lastUseTime_(0), lineSize_(64),
           isEmpty_(true), tag_({CacheLineState::INVALID, 0}) {}
