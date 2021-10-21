@@ -13,7 +13,7 @@ FetchContent_MakeAvailable(googletest)
 
 # include_directories(test)
 
-add_executable(CacheTracer main.cpp cache.cpp config.cpp)
+add_executable(CacheTracer main.cpp cache.cpp config.cpp bus.cpp)
 
 enable_testing()
 add_executable(

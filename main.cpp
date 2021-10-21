@@ -29,6 +29,10 @@ int main(int argc, char **argv) {
     Cache l3Cache(tc.l3Size, CacheCoherenceProto::MESI, tc.nWay, l3TotalSets,
                   tc.lineSize, tc.addrLen);
 
+    l1Cache.SetCacheForAllSet();
+    l2Cache.SetCacheForAllSet();
+    l3Cache.SetCacheForAllSet();
+
     l1Cache.setNextLevel(&l2Cache);
     l2Cache.setNextLevel(&l3Cache);
 
@@ -36,11 +40,11 @@ int main(int argc, char **argv) {
     SnoopBus bus;
     bus.AddProcessor(&processor);
     processor.setBus(&bus);
-    
+
     l1Cache.setBus(&bus);
     l2Cache.setBus(&bus);
     l3Cache.setBus(&bus);
-   
+
     // Now we are set...
     // cout << "L1 info: \n";
     // l1Cache.PrintInfo();
