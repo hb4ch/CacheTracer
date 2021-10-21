@@ -32,8 +32,8 @@ void Cache::Put(uint64_t addr) {
     for (TaggedCacheLine &cl : hitSet.dir) {
         if (cl.getTag().state == CacheLineState::INVALID) {
             cl.setTag({CacheLineState::EXCLUSIVE, tag});
-            cl.setBirthTime(timeStamp_);
-            cl.setLastUseTime(timeStamp_);
+            cl.setBirthTime(GetProcessor()->getTimeStamp());
+            cl.setLastUseTime(GetProcessor()->getTimeStamp());
             return;
         }
     }
@@ -61,8 +61,8 @@ void Cache::Read(uint64_t addr) {
     for (TaggedCacheLine &cl : hitSet.dir) {
         if (cl.getTag().state == CacheLineState::INVALID) {
             cl.setTag({CacheLineState::EXCLUSIVE, tag});
-            cl.setBirthTime(timeStamp_);
-            cl.setLastUseTime(timeStamp_);
+            cl.setBirthTime(GetProcessor()->getTimeStamp());
+            cl.setLastUseTime(GetProcessor()->getTimeStamp());
             return;
         }
     }
@@ -98,19 +98,9 @@ bool Cache::Probe(uint64_t addr, TaggedCacheLine **cl) {
 }
 
 void Cache::Invalidate(uint64_t addr) {
-    uint64_t addrCopy = addr;
-    uint64_t offsetMask = (1u << (bitsForOffset)) - 1;
-    uint64_t offset = addr & offsetMask;
-    addr = addr >> bitsForOffset;
+    uint64_t tag = GetTag(addr);
+    CacheSet &hitSet = sets[GetSet(addr)];
 
-    uint64_t setMask = (1u << (bitsForSet)) - 1;
-    uint64_t set = addr & setMask;
-    addr = addr >> bitsForSet;
-
-    uint64_t tagMask = (1u << (bitsForTag)) - 1;
-    uint64_t tag = addr & tagMask;
-
-    CacheSet &hitSet = sets[set];
     for (TaggedCacheLine &cl : hitSet.dir) {
         if (cl.getTag().tag == tag) {
             cl.setTag({CacheLineState::INVALID, tag});
@@ -146,6 +136,7 @@ void Processor::ProcessorRead(int processNum, uint64_t addr) {
     } else {
         l1Cache_[processNum]->Read(addr);
     }
+    timeStamp_++;
 }
 
 void Processor::PrWrMachine(TaggedCacheLine *cl, uint64_t addr) {
@@ -174,4 +165,5 @@ void Processor::ProcessorWrite(int processNum, uint64_t addr) {
     } else {
         l1Cache_[processNum]->Put(addr);
     }
+    timeStamp_++;
 }

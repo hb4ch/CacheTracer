@@ -42,8 +42,13 @@ int main(int argc, char **argv) {
     processor.setBus(&bus);
 
     l1Cache.setBus(&bus);
+    l1Cache.setProcessor(&processor);
+
     l2Cache.setBus(&bus);
+    l2Cache.setProcessor(&processor);
+
     l3Cache.setBus(&bus);
+    l3Cache.setProcessor(&processor);
 
     // Now we are set...
     // cout << "L1 info: \n";

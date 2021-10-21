@@ -56,16 +56,15 @@ class Cache {
     size_t bitsForTag;
     // calculated
 
-    size_t timeStamp_;
     SnoopBus *bus_;
+    Processor *processor_;
 
   public:
     Cache(int totalSize, CacheCoherenceProto proto, int nWay, int totalSets,
           int lineSize, int addrLen)
         : totalSize_(totalSize), lineSize_(lineSize), proto_(proto),
           nWay_(nWay), totalSets_(totalSets), addrLen_(addrLen),
-          sets(totalSets, nWay), nextLevelCache(nullptr), timeStamp_(0),
-          bus_(nullptr) {
+          sets(totalSets, nWay), nextLevelCache(nullptr), bus_(nullptr) {
         totalCacheLines = totalSize / lineSize;
         linesPerWay = totalCacheLines / nWay;
         bitsForOffset = LOG2(lineSize);
@@ -82,7 +81,7 @@ class Cache {
     }
     void setNextLevel(Cache *cache) { nextLevelCache = cache; }
     void setBus(SnoopBus *bus) { bus_ = bus; }
-    void IncTime() { timeStamp_++; }
+    void setProcessor(Processor *p) { processor_ = p; }
     void PrintInfo();
     void Put(uint64_t addr);
     void Read(uint64_t addr);
@@ -105,6 +104,7 @@ class Cache {
     }
 
     SnoopBus *GetBus() { return bus_; }
+    Processor *GetProcessor() { return processor_; }
 };
 
 class Processor {
@@ -116,8 +116,10 @@ class Processor {
     SnoopBus *bus_;
     int numCore = 0;
 
+    uint32_t timeStamp_;
+
   public:
-    Processor(Cache *l1, Cache *l2, Cache *l3) : l3Cache_(l3) {
+    Processor(Cache *l1, Cache *l2, Cache *l3) : l3Cache_(l3), timeStamp_(0) {
         l1Cache_.push_back(l1);
         l2Cache_.push_back(l2);
         numCore++;
@@ -130,6 +132,7 @@ class Processor {
     void setBus(SnoopBus *bus) { bus_ = bus; }
 
     SnoopBus *getBus() { return bus_; }
+    uint32_t getTimeStamp() { return timeStamp_; }
     std::vector<Cache *> *getL1Cache() { return &l1Cache_; }
     std::vector<Cache *> *getL2Cache() { return &l2Cache_; }
     Cache *getL3Cache() { return l3Cache_; }
