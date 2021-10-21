@@ -1,12 +1,14 @@
 # Compile
 ```
-copy to PIN_DIR/source/tools
-cd memtrace
+copy trace to PIN_DIR/source/tools/
+cd trace
 make
 ```
 
 # Usage
 ```
+copy trace_parser.py mem_trace.py to PIN_DIR
 cd PIN_DIR
-./pin -t source/tools/memtrace/obj-intel64/memtracer.so -- PROGRAM, eg. /bin/ls
+python3 mem_trace.py PROGRAM, eg. /bin/ls
 ```
+
