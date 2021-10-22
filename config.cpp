@@ -33,14 +33,14 @@ int LoadConfig(int argc, char **argv, TracerConfig &tc) {
             } else {
                 std::cerr << "Unknown option!" << std::endl;
             }
-            return 1;
+            return -1;
         default:
             abort();
         }
     }
     if (!tFlag) {
         std::cerr << "No trace file provided!" << std::endl;
-        return 1;
+        return -1;
     }
 
     if (!cFlag) {
@@ -58,27 +58,31 @@ int LoadConfig(int argc, char **argv, TracerConfig &tc) {
                 tc.addrLen >> tc.lineSize;
         } catch (const std::exception &e) {
             std::cerr << "Error reading config File!" << std::endl;
-            return 1;
+            return -1;
         }
         if (tc.nCore < 0 || tc.nCore > 31) {
             std::cerr << "Wrong number of cores!" << std::endl;
-            return 1;
+            return -1;
         }
-        if (tc.nWay < 0 || tc.nWay > 16) {
+        if (tc.nWay < 2 || tc.nWay > 32) {
             std::cerr << "Wrong number of n-Way!" << std::endl;
-            return 1;
+            return -1;
         }
         if (tc.l1Size > 16 * MB) {
             std::cerr << "L1 Cache size is too large!" << std::endl;
-            return 1;
+            return -1;
         }
         if (tc.l2Size > 32 * MB) {
             std::cerr << "L2 Cache size is too large!" << std::endl;
-            return 1;
+            return -1;
         }
         if (tc.l3Size > 128 * MB) {
             std::cerr << "L3 Cache size is too large!" << std::endl;
-            return 1;
+            return -1;
+        }
+        if (tc.addrLen > 64) {
+            std::cerr << "Address bus cannot exceed 64-bit!" << std::endl;
+            return -1;
         }
     }
     return 0;

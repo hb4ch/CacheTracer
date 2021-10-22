@@ -69,19 +69,36 @@ int main(int argc, char **argv) {
     l3Cache.setProcessor(&processor);
 
     // Now we are set...
-    cout << "L1 info: \n";
-    l1Caches[0]->PrintInfo();
-    cout << "---------------------------------\n";
-    cout << "L2 info: \n";
-    l2Caches[0]->PrintInfo();
-    cout << "---------------------------------\n";
-    cout << "L3 info: \n";
-    l3Cache.PrintInfo();
-
-    // std::fstream traceStream(tc.traceFile);
-
-    // while (traceStream) {
-    // }
-
+    // cout << "L1 info: \n";
+    // l1Caches[0]->PrintInfo();
+    // cout << "---------------------------------\n";
+    // cout << "L2 info: \n";
+    // l2Caches[0]->PrintInfo();
+    // cout << "---------------------------------\n";
+    // cout << "L3 info: \n";
+    // l3Cache.PrintInfo();
+    try {
+        std::fstream traceStream(tc.traceFile);
+        while (traceStream) {
+            uint32_t threadNum;
+            uint64_t addr;
+            char op;
+            size_t opSize;
+            traceStream >> std::dec >> threadNum >> op >> std::hex >> addr >>
+                std::dec >> opSize;
+            if (op == 'w') {
+                processor.ProcessorRead(threadNum % tc.nCore, addr);
+            } else if (op == 'r') {
+                processor.ProcessorWrite(threadNum % tc.nCore, addr);
+            } else {
+                std::cerr << "Invalid operation type!" << std::endl;
+                return -1;
+            }
+        }
+    } catch (const std::exception &e) {
+        std::cerr << "Error reading trace file, data exception." << std::endl;
+        return -1;
+    }
+    fflush(stdout);
     return 0;
 }
