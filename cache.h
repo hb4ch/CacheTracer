@@ -119,11 +119,16 @@ class Processor {
     uint32_t timeStamp_;
 
   public:
-    Processor(Cache *l1, Cache *l2, Cache *l3) : l3Cache_(l3), timeStamp_(0) {
+    Processor() : timeStamp_(0) {}
+
+    void AddL1L2CacheForCore(Cache *l1, Cache *l2) {
         l1Cache_.push_back(l1);
         l2Cache_.push_back(l2);
         numCore++;
     }
+
+    void SetL3Cache(Cache *l3) { l3Cache_ = l3; }
+
     void PrRdMachine(TaggedCacheLine *cl, uint64_t);
     void ProcessorRead(int processNum, uint64_t addr);
 

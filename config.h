@@ -9,6 +9,7 @@ constexpr size_t GB = 1024 * MB;
 enum class CacheCoherenceProto { MESI, MOSEI, MESIF };
 
 struct TracerConfig {
+    int nCore;
     int nWay;
     size_t l1Size;
     size_t l2Size;

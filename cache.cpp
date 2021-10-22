@@ -142,13 +142,13 @@ void Processor::ProcessorRead(int processNum, uint64_t addr) {
 void Processor::PrWrMachine(TaggedCacheLine *cl, uint64_t addr) {
     if (cl->getTag().state == CacheLineState::INVALID) {
         cl->getTag().state = CacheLineState::MODIFIED;
-        cl->getCache()->GetBus()->InvalidOtherCache(cl->getCache(), addr);
+        bus_->InvalidOtherCache(cl->getCache(), addr);
         // tell bus to invalidate all other cache;
     } else if (cl->getTag().state == CacheLineState::EXCLUSIVE) {
         cl->getTag().state = CacheLineState::MODIFIED;
     } else if (cl->getTag().state == CacheLineState::SHARED) {
         cl->getTag().state = CacheLineState::MODIFIED;
-        cl->getCache()->GetBus()->InvalidOtherCache(cl->getCache(), addr);
+        bus_->InvalidOtherCache(cl->getCache(), addr);
     } else if (cl->getTag().state == CacheLineState::MODIFIED) {
         // do nothing
     }

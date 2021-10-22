@@ -44,6 +44,7 @@ int LoadConfig(int argc, char **argv, TracerConfig &tc) {
     }
 
     if (!cFlag) {
+        tc.nCore = 2;
         tc.nWay = 8;
         tc.l1Size = 64 * KB;
         tc.l2Size = 256 * KB;
@@ -53,10 +54,30 @@ int LoadConfig(int argc, char **argv, TracerConfig &tc) {
     } else {
         try {
             std::fstream fs(configFile);
-            fs >> tc.nWay >> tc.l1Size >> tc.l2Size >> tc.l3Size >>
+            fs >> tc.nCore >> tc.nWay >> tc.l1Size >> tc.l2Size >> tc.l3Size >>
                 tc.addrLen >> tc.lineSize;
         } catch (const std::exception &e) {
             std::cerr << "Error reading config File!" << std::endl;
+            return 1;
+        }
+        if (tc.nCore < 0 || tc.nCore > 31) {
+            std::cerr << "Wrong number of cores!" << std::endl;
+            return 1;
+        }
+        if (tc.nWay < 0 || tc.nWay > 16) {
+            std::cerr << "Wrong number of n-Way!" << std::endl;
+            return 1;
+        }
+        if (tc.l1Size > 16 * MB) {
+            std::cerr << "L1 Cache size is too large!" << std::endl;
+            return 1;
+        }
+        if (tc.l2Size > 32 * MB) {
+            std::cerr << "L2 Cache size is too large!" << std::endl;
+            return 1;
+        }
+        if (tc.l3Size > 128 * MB) {
+            std::cerr << "L3 Cache size is too large!" << std::endl;
             return 1;
         }
     }
