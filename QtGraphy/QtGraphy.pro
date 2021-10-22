@@ -1,6 +1,6 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2021-10-20T16:23:48
+# Project created by QtCreator 2021-10-22T21:16:45
 #
 #-------------------------------------------------
 
@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = graphy
+TARGET = QtGraphy
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -29,6 +29,3 @@ SOURCES += \
 
 HEADERS += \
         mainwindow.h
-
-FORMS += \
-        mainwindow.ui
