@@ -26,7 +26,7 @@ cmake -DCMAKE_BUILD_TYPE=Debug .. && make -j4
 
 # Usage
 ```
-./CacheTracer [-c config_file] -t trace_file [-m cache_miss_output]
+./CacheTracer [-c config_file] -t trace_file [-m cache_miss_output] [-e evict_stat_output]
 ```
 
 # Develop

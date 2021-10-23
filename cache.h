@@ -45,6 +45,7 @@ class Cache {
     int totalSets_;
     size_t lineSize_;
     int addrLen_;
+    std::string name_;
     // c'tor
 
     std::vector<CacheSet> sets;
@@ -65,10 +66,12 @@ class Cache {
     // stats
 
   public:
-    Cache(int totalSize, int nWay, int totalSets, int lineSize, int addrLen)
+    Cache(int totalSize, int nWay, int totalSets, int lineSize, int addrLen,
+          const std::string &name)
         : totalSize_(totalSize), nWay_(nWay), totalSets_(totalSets),
-          lineSize_(lineSize), addrLen_(addrLen), sets(totalSets, nWay),
-          nextLevelCache(nullptr), bus_(nullptr), totalMiss(0) {
+          lineSize_(lineSize), addrLen_(addrLen), name_(name),
+          sets(totalSets, nWay), nextLevelCache(nullptr), bus_(nullptr),
+          totalMiss(0) {
         totalCacheLines = totalSize / lineSize;
         linesPerWay = totalCacheLines / nWay;
         bitsForOffset = LOG2(lineSize);
@@ -87,8 +90,8 @@ class Cache {
     void setBus(SnoopBus *bus) { bus_ = bus; }
     void setProcessor(Processor *p) { processor_ = p; }
     void PrintInfo();
-    void Put(uint64_t addr);
-    void Read(uint64_t addr);
+    void Put(uint64_t addr, std::ofstream &evictFs);
+    void Read(uint64_t addr, std::ofstream &evictFs);
     bool Probe(uint64_t addr, TaggedCacheLine **cl);
     bool ProbeNoStat(uint64_t addr, TaggedCacheLine **cl);
     void Invalidate(uint64_t addr);
@@ -110,6 +113,7 @@ class Cache {
 
     SnoopBus *GetBus() { return bus_; }
     Processor *GetProcessor() { return processor_; }
+    std::string GetName() { return name_; }
 
     void IncMiss() { totalMiss++; }
     uint64_t GetMiss() { return totalMiss; }
@@ -138,10 +142,10 @@ class Processor {
     void SetL3Cache(Cache *l3) { l3Cache_ = l3; }
 
     void PrRdMachine(TaggedCacheLine *cl, uint64_t);
-    void ProcessorRead(int processNum, uint64_t addr);
+    void ProcessorRead(int processNum, uint64_t addr, std::ofstream &evictFs);
 
     void PrWrMachine(TaggedCacheLine *cl, uint64_t addr);
-    void ProcessorWrite(int processNum, uint64_t addr);
+    void ProcessorWrite(int processNum, uint64_t addr, std::ofstream &evictFs);
     void setBus(SnoopBus *bus) { bus_ = bus; }
 
     SnoopBus *getBus() { return bus_; }

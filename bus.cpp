@@ -49,7 +49,12 @@ void SnoopBus::BusRd(Cache *selfCache, uint64_t addr, BusRdResp &resp) {
     TaggedCacheLine *ocl = nullptr;
     size_t nCore = selfCache->GetProcessor()->getL1Cache()->size();
     size_t selfCoreNum = 0;
-    bool l3 = false;
+    if (selfCache->GetProcessor()->getL3Cache() == selfCache) {
+        resp = BusRdResp::HAS_NO_VALID_OTHER_COPY;
+        return;
+    }
+    // if broatcastee is l3, then no need to broadcast to other cores.
+
     while (selfCoreNum++) {
         if (selfCache->GetProcessor()->getL1Cache()->at(selfCoreNum) ==
             selfCache) {
@@ -59,18 +64,10 @@ void SnoopBus::BusRd(Cache *selfCache, uint64_t addr, BusRdResp &resp) {
             selfCache) {
             break;
         }
-        if (selfCache->GetProcessor()->getL3Cache() == selfCache) {
-            l3 = true;
-            break;
-        }
     }
-    if (l3) {
-        resp = BusRdResp::HAS_NO_VALID_OTHER_COPY;
-        return;
-    }
+
     assert(selfCoreNum < nCore);
     resp = BusRdResp::HAS_NO_VALID_OTHER_COPY;
-    // if broatcastee is l3, then no need to broadcast to other cores.
     for (size_t i = 0; i < processors.size(); i++) {
         for (size_t j = 0; j < processors[i]->getL1Cache()->size(); j++) {
             if (j != selfCoreNum) {

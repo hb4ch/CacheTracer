@@ -15,7 +15,7 @@ int LoadConfig(int argc, char **argv, TracerConfig &tc) {
     int tFlag = 0; // trace file flag
     std::string configFile;
 
-    while ((c = getopt(argc, argv, "c:t:m:")) != -1) {
+    while ((c = getopt(argc, argv, "c:t:m:e:")) != -1) {
         switch (c) {
         case 'c':
             cFlag = 1;
@@ -27,6 +27,9 @@ int LoadConfig(int argc, char **argv, TracerConfig &tc) {
             break;
         case 'm':
             tc.missFile = std::string(optarg);
+            break;
+        case 'e':
+            tc.evictFile = std::string(optarg);
             break;
         case '?':
             if (optopt == 'c') {

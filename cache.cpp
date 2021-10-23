@@ -25,13 +25,14 @@ void Cache::PrintInfo() {
               << std::endl;
 }
 
-void Cache::Put(uint64_t addr) {
+void Cache::Put(uint64_t addr, std::ofstream &evictFs) {
     CacheSet &hitSet = sets.at(GetSet(addr));
 
     // Find first empty and put
     for (TaggedCacheLine &cl : hitSet.dir) {
         if (cl.getTag().state == CacheLineState::INVALID) {
             cl.setTag({CacheLineState::EXCLUSIVE, addr});
+            cl.setUsedBitmap(GetOffset(addr));
             cl.setBirthTime(GetProcessor()->getTimeStamp());
             cl.setLastUseTime(GetProcessor()->getTimeStamp());
             return;
@@ -47,19 +48,29 @@ void Cache::Put(uint64_t addr) {
             leastUsedTime = cl.getLastUseTime();
         }
     }
-    hitSet.dir[victimEntry].setTag({CacheLineState::EXCLUSIVE, addr});
+    TaggedCacheLine &cl = hitSet.dir[victimEntry];
+    if (evictFs) {
+        evictFs << GetName() << " " << cl.getUsedSize() << "\n";
+    }
+    uint64_t victimAddr = cl.getTag().addr;
+    cl.setTag({CacheLineState::EXCLUSIVE, addr});
+    cl.setBirthTime(GetProcessor()->getTimeStamp());
+    cl.setLastUseTime(GetProcessor()->getTimeStamp());
+    cl.clearUsedMap();
+    cl.setUsedBitmap(GetOffset(addr));
     if (nextLevelCache) {
-        nextLevelCache->Put(addr);
+        nextLevelCache->Put(victimAddr, evictFs);
     }
 }
 
-void Cache::Read(uint64_t addr) {
+void Cache::Read(uint64_t addr, std::ofstream &evictFs) {
     CacheSet &hitSet = sets.at(GetSet(addr));
 
     // Find first invalid and put
     for (TaggedCacheLine &cl : hitSet.dir) {
         if (cl.getTag().state == CacheLineState::INVALID) {
             cl.setTag({CacheLineState::EXCLUSIVE, addr});
+            cl.setUsedBitmap(GetOffset(addr));
             cl.setBirthTime(GetProcessor()->getTimeStamp());
             cl.setLastUseTime(GetProcessor()->getTimeStamp());
             return;
@@ -76,12 +87,18 @@ void Cache::Read(uint64_t addr) {
         }
     }
     TaggedCacheLine &cl = hitSet.dir[victimEntry];
+
+    if (evictFs) {
+        evictFs << GetName() << " " << cl.getUsedSize() << "\n";
+    }
     uint64_t victimAddr = cl.getTag().addr;
     cl.setTag({CacheLineState::EXCLUSIVE, addr});
     cl.setBirthTime(GetProcessor()->getTimeStamp());
     cl.setLastUseTime(GetProcessor()->getTimeStamp());
+    cl.clearUsedMap();
+    cl.setUsedBitmap(GetOffset(addr));
     if (nextLevelCache) {
-        nextLevelCache->Read(victimAddr);
+        nextLevelCache->Read(victimAddr, evictFs);
     }
 }
 
@@ -93,6 +110,7 @@ bool Cache::Probe(uint64_t addr, TaggedCacheLine **cl) {
         if (tcl.getTag().state != CacheLineState::INVALID &&
             GetTag(tcl.getTag().addr) == tag) {
             tcl.setLastUseTime(GetProcessor()->getTimeStamp());
+            tcl.setUsedBitmap(GetOffset(addr));
             *cl = &tcl;
             return true;
         }
@@ -146,25 +164,26 @@ void Processor::PrRdMachine(TaggedCacheLine *cl, uint64_t addr) {
     }
 }
 
-void Processor::ProcessorRead(int processNum, uint64_t addr) {
+void Processor::ProcessorRead(int processNum, uint64_t addr,
+                              std::ofstream &evictFs) {
     TaggedCacheLine *cl = nullptr;
     if (l1Cache_[processNum]->Probe(addr, &cl)) {
         PrRdMachine(cl, addr);
     } else if (l2Cache_[processNum]->Probe(addr, &cl)) {
         l1Cache_[processNum]->IncMiss();
-        l1Cache_[processNum]->Read(addr);
+        l1Cache_[processNum]->Read(addr, evictFs);
         PrRdMachine(cl, addr);
     } else if (l3Cache_->Probe(addr, &cl)) {
         l1Cache_[processNum]->IncMiss();
         l2Cache_[processNum]->IncMiss();
-        l1Cache_[processNum]->Read(addr);
+        l1Cache_[processNum]->Read(addr, evictFs);
         PrRdMachine(cl, addr);
     } else {
         l1Cache_[processNum]->IncMiss();
         l2Cache_[processNum]->IncMiss();
         l3Cache_->IncMiss();
 
-        l1Cache_[processNum]->Read(addr);
+        l1Cache_[processNum]->Read(addr, evictFs);
     }
     timeStamp_++;
 }
@@ -184,25 +203,26 @@ void Processor::PrWrMachine(TaggedCacheLine *cl, uint64_t addr) {
     }
 }
 
-void Processor::ProcessorWrite(int processNum, uint64_t addr) {
+void Processor::ProcessorWrite(int processNum, uint64_t addr,
+                               std::ofstream &evictFs) {
     TaggedCacheLine *cl = nullptr;
     if (l1Cache_[processNum]->Probe(addr, &cl)) {
         PrWrMachine(cl, addr);
     } else if (l2Cache_[processNum]->Probe(addr, &cl)) {
         l1Cache_[processNum]->IncMiss();
-        l1Cache_[processNum]->Put(addr);
+        l1Cache_[processNum]->Put(addr, evictFs);
         PrWrMachine(cl, addr);
     } else if (l3Cache_->Probe(addr, &cl)) {
         l1Cache_[processNum]->IncMiss();
         l2Cache_[processNum]->IncMiss();
-        l1Cache_[processNum]->Put(addr);
+        l1Cache_[processNum]->Put(addr, evictFs);
         PrWrMachine(cl, addr);
     } else {
         l1Cache_[processNum]->IncMiss();
         l2Cache_[processNum]->IncMiss();
         l3Cache_->IncMiss();
 
-        l1Cache_[processNum]->Put(addr);
+        l1Cache_[processNum]->Put(addr, evictFs);
     }
     timeStamp_++;
 }

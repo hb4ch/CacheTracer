@@ -18,6 +18,7 @@ struct TracerConfig {
 
     std::string traceFile;
     std::string missFile;
+    std::string evictFile;
     // TODO: 继续完善
 };
 // TracerConfig POD

@@ -31,14 +31,15 @@ int main(int argc, char **argv) {
 
     for (int i = 0; i < tc.nCore; i++) {
         l1Caches[i] = std::make_shared<Cache>(tc.l1Size, tc.nWay, l1TotalSets,
-                                              tc.lineSize, tc.addrLen);
+                                              tc.lineSize, tc.addrLen, "l1");
         l2Caches[i] = std::make_shared<Cache>(tc.l2Size, tc.nWay, l2TotalSets,
-                                              tc.lineSize, tc.addrLen);
+                                              tc.lineSize, tc.addrLen, "l2");
         l1Caches[i]->SetCacheForAllSet();
         l1Caches[i]->SetCacheForAllSet();
     }
     // TODO: pmr
-    Cache l3Cache(tc.l3Size, tc.nWay, l3TotalSets, tc.lineSize, tc.addrLen);
+    Cache l3Cache(tc.l3Size, tc.nWay, l3TotalSets, tc.lineSize, tc.addrLen,
+                  "l3");
     l3Cache.SetCacheForAllSet();
     for (int i = 0; i < tc.nCore; i++) {
         l1Caches[i]->setNextLevel(l2Caches[i].get());
@@ -75,9 +76,13 @@ int main(int argc, char **argv) {
     // cout << "L3 info: \n";
     // l3Cache.PrintInfo();
     std::ofstream missFileStream;
+    std::ofstream evictFileStream;
     try {
         if (!tc.missFile.empty()) {
             missFileStream.open(tc.missFile, std::ios::out | std::ios::trunc);
+        }
+        if (!tc.evictFile.empty()) {
+            evictFileStream.open(tc.evictFile, std::ios::out | std::ios::trunc);
         }
         std::fstream traceStream(tc.traceFile);
         while (traceStream) {
@@ -93,12 +98,14 @@ int main(int argc, char **argv) {
             }
             if (op == 'w') {
                 for (size_t i = 0; i < opSize; i++) {
-                    processor.ProcessorWrite(threadNum % tc.nCore, addr + i);
+                    processor.ProcessorWrite(threadNum % tc.nCore, addr + i,
+                                             evictFileStream);
                 }
                 processor.OutputCacheMissOneLine(missFileStream);
             } else if (op == 'r') {
                 for (size_t i = 0; i < opSize; i++) {
-                    processor.ProcessorRead(threadNum % tc.nCore, addr + i);
+                    processor.ProcessorRead(threadNum % tc.nCore, addr + i,
+                                            evictFileStream);
                 }
                 processor.OutputCacheMissOneLine(missFileStream);
             } else {
