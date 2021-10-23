@@ -8,6 +8,7 @@ A CacheTrace eats a sequence of memory trace and spits out cache utility.
 sudo apt install build-essential cmake
 ```
 
+#### Release
 ```
 cd CacheTracer
 mkdir build
@@ -15,9 +16,17 @@ cd build
 cmake .. && make -j4
 ```
 
+#### Debug
+```
+cd CacheTracer
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug .. && make -j4
+```
+
 # Usage
 ```
-./CacheTracer [-c config_file] -t trace_file
+./CacheTracer [-c config_file] -t trace_file [-m cache_miss_output]
 ```
 
 # Develop

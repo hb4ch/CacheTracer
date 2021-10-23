@@ -1,5 +1,6 @@
 #include "cache.h"
 
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 
@@ -25,13 +26,12 @@ void Cache::PrintInfo() {
 }
 
 void Cache::Put(uint64_t addr) {
-    uint64_t tag = GetTag(addr);
     CacheSet &hitSet = sets.at(GetSet(addr));
 
     // Find first empty and put
     for (TaggedCacheLine &cl : hitSet.dir) {
         if (cl.getTag().state == CacheLineState::INVALID) {
-            cl.setTag({CacheLineState::EXCLUSIVE, tag});
+            cl.setTag({CacheLineState::EXCLUSIVE, addr});
             cl.setBirthTime(GetProcessor()->getTimeStamp());
             cl.setLastUseTime(GetProcessor()->getTimeStamp());
             return;
@@ -47,20 +47,19 @@ void Cache::Put(uint64_t addr) {
             leastUsedTime = cl.getLastUseTime();
         }
     }
-    hitSet.dir[victimEntry].setTag({CacheLineState::EXCLUSIVE, tag});
+    hitSet.dir[victimEntry].setTag({CacheLineState::EXCLUSIVE, addr});
     if (nextLevelCache) {
         nextLevelCache->Put(addr);
     }
 }
 
 void Cache::Read(uint64_t addr) {
-    uint64_t tag = GetTag(addr);
     CacheSet &hitSet = sets.at(GetSet(addr));
 
     // Find first invalid and put
     for (TaggedCacheLine &cl : hitSet.dir) {
         if (cl.getTag().state == CacheLineState::INVALID) {
-            cl.setTag({CacheLineState::EXCLUSIVE, tag});
+            cl.setTag({CacheLineState::EXCLUSIVE, addr});
             cl.setBirthTime(GetProcessor()->getTimeStamp());
             cl.setLastUseTime(GetProcessor()->getTimeStamp());
             return;
@@ -76,9 +75,13 @@ void Cache::Read(uint64_t addr) {
             leastUsedTime = cl.getLastUseTime();
         }
     }
-    hitSet.dir[victimEntry].setTag({CacheLineState::INVALID, tag});
+    TaggedCacheLine &cl = hitSet.dir[victimEntry];
+    uint64_t victimAddr = cl.getTag().addr;
+    cl.setTag({CacheLineState::EXCLUSIVE, addr});
+    cl.setBirthTime(GetProcessor()->getTimeStamp());
+    cl.setLastUseTime(GetProcessor()->getTimeStamp());
     if (nextLevelCache) {
-        nextLevelCache->Read(addr);
+        nextLevelCache->Read(victimAddr);
     }
 }
 
@@ -88,7 +91,8 @@ bool Cache::Probe(uint64_t addr, TaggedCacheLine **cl) {
 
     for (TaggedCacheLine &tcl : hitSet.dir) {
         if (tcl.getTag().state != CacheLineState::INVALID &&
-            tcl.getTag().tag == tag) {
+            GetTag(tcl.getTag().addr) == tag) {
+            tcl.setLastUseTime(GetProcessor()->getTimeStamp());
             *cl = &tcl;
             return true;
         }
@@ -102,8 +106,8 @@ void Cache::Invalidate(uint64_t addr) {
     CacheSet &hitSet = sets[GetSet(addr)];
 
     for (TaggedCacheLine &cl : hitSet.dir) {
-        if (cl.getTag().tag == tag) {
-            cl.setTag({CacheLineState::INVALID, tag});
+        if (GetTag(cl.getTag().addr) == tag) {
+            cl.setTag({CacheLineState::INVALID, addr});
             return;
         }
     }
@@ -180,4 +184,14 @@ void Processor::ProcessorWrite(int processNum, uint64_t addr) {
         l1Cache_[processNum]->Put(addr);
     }
     timeStamp_++;
+}
+
+void Processor::OutputCacheMissOneLine(std::ofstream &fs) {
+    uint64_t l1Miss = 0, l2Miss = 0, l3Miss = 0;
+    for (size_t i = 0; i < l1Cache_.size(); i++) {
+        l1Miss += l1Cache_[i]->GetMiss();
+        l2Miss += l2Cache_[i]->GetMiss();
+    }
+    l3Miss += l3Cache_->GetMiss();
+    fs << l1Miss << " " << l2Miss << " " << l3Miss << "\n";
 }

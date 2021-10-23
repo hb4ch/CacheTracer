@@ -74,7 +74,11 @@ int main(int argc, char **argv) {
     // cout << "---------------------------------\n";
     // cout << "L3 info: \n";
     // l3Cache.PrintInfo();
+    std::ofstream missFileStream;
     try {
+        if (!tc.missFile.empty()) {
+            missFileStream.open(tc.missFile, std::ios::out | std::ios::trunc);
+        }
         std::fstream traceStream(tc.traceFile);
         while (traceStream) {
             uint32_t threadNum;
@@ -88,11 +92,15 @@ int main(int argc, char **argv) {
                 return -1;
             }
             if (op == 'w') {
-                for (size_t i = 0; i < opSize; i++)
+                for (size_t i = 0; i < opSize; i++) {
                     processor.ProcessorRead(threadNum % tc.nCore, addr + i);
+                }
+                processor.OutputCacheMissOneLine(missFileStream);
             } else if (op == 'r') {
-                for (size_t i = 0; i < opSize; i++)
+                for (size_t i = 0; i < opSize; i++) {
                     processor.ProcessorWrite(threadNum % tc.nCore, addr + i);
+                }
+                processor.OutputCacheMissOneLine(missFileStream);
             } else {
                 std::cerr << "Invalid operation type!" << std::endl;
                 return -1;
@@ -102,6 +110,8 @@ int main(int argc, char **argv) {
         std::cerr << "Error reading trace file, data exception." << std::endl;
         return -1;
     }
+    missFileStream.flush();
     fflush(stdout);
+
     return 0;
 }

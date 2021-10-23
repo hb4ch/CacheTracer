@@ -1,5 +1,6 @@
 #pragma once
 #include <cstddef>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -108,6 +109,7 @@ class Cache {
     Processor *GetProcessor() { return processor_; }
 
     void IncMiss() { totalMiss++; }
+    uint64_t GetMiss() { return totalMiss; }
 };
 
 class Processor {
@@ -144,6 +146,8 @@ class Processor {
     std::vector<Cache *> *getL1Cache() { return &l1Cache_; }
     std::vector<Cache *> *getL2Cache() { return &l2Cache_; }
     Cache *getL3Cache() { return l3Cache_; }
+
+    void OutputCacheMissOneLine(std::ofstream &fs);
 };
 
 class SnoopBus {

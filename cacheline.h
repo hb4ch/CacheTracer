@@ -9,7 +9,7 @@ class Cache;
 
 struct Tag {
     CacheLineState state; // MESI state transitions
-    uint64_t tag;         // higher part of address, used to do compare amongst
+    uint64_t addr;        // higher part of address, used to do compare amongst
                           // cachelines of a cache set.
 };
 
