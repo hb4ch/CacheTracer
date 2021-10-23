@@ -95,6 +95,7 @@ class Cache {
     bool Probe(uint64_t addr, TaggedCacheLine **cl);
     bool ProbeNoStat(uint64_t addr, TaggedCacheLine **cl);
     void Invalidate(uint64_t addr);
+    void dumpAllLeft(std::ofstream &evictFs);
 
     uint64_t GetOffset(uint64_t addr) {
         uint64_t offsetMask = (1 << bitsForOffset) - 1;
@@ -155,6 +156,7 @@ class Processor {
     Cache *getL3Cache() { return l3Cache_; }
 
     void OutputCacheMissOneLine(std::ofstream &fs);
+    void DumpLeftCacheLines(std::ofstream &evictFs);
 };
 
 class SnoopBus {

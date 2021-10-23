@@ -147,6 +147,16 @@ void Cache::Invalidate(uint64_t addr) {
     }
 }
 
+void Cache::dumpAllLeft(std::ofstream &evictFs) {
+    for (CacheSet &cs : sets) {
+        for (TaggedCacheLine &cl : cs.dir) {
+            if (cl.getTag().state != CacheLineState::INVALID) {
+                evictFs << GetName() << " " << cl.getUsedSize() << "\n";
+            }
+        }
+    }
+}
+
 void Processor::PrRdMachine(TaggedCacheLine *cl, uint64_t addr) {
     if (cl->getTag().state == CacheLineState::INVALID) {
         BusRdResp busRdResp;
@@ -238,4 +248,15 @@ void Processor::OutputCacheMissOneLine(std::ofstream &fs) {
     }
     l3Miss = l3Cache_->GetMiss();
     fs << l1Miss << " " << l2Miss << " " << l3Miss << "\n";
+}
+void Processor::DumpLeftCacheLines(std::ofstream &evictFs) {
+    for (size_t i = 0; i < getL1Cache()->size(); i++) {
+        Cache *c = getL1Cache()->at(i);
+        c->dumpAllLeft(evictFs);
+    }
+    for (size_t i = 0; i < getL2Cache()->size(); i++) {
+        Cache *c = getL2Cache()->at(i);
+        c->dumpAllLeft(evictFs);
+    }
+    getL3Cache()->dumpAllLeft(evictFs);
 }

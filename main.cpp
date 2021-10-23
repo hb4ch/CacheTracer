@@ -117,6 +117,7 @@ int main(int argc, char **argv) {
         std::cerr << "Error reading trace file, data exception." << std::endl;
         return -1;
     }
+    processor.DumpLeftCacheLines(evictFileStream);
     missFileStream.flush();
     fflush(stdout);
 
