@@ -135,10 +135,12 @@ void Processor::ProcessorRead(int processNum, uint64_t addr) {
         PrRdMachine(cl, addr);
     } else if (l2Cache_[processNum]->Probe(addr, &cl)) {
         l1Cache_[processNum]->IncMiss();
+        l1Cache_[processNum]->Read(addr);
         PrRdMachine(cl, addr);
     } else if (l3Cache_->Probe(addr, &cl)) {
         l1Cache_[processNum]->IncMiss();
         l2Cache_[processNum]->IncMiss();
+        l1Cache_[processNum]->Read(addr);
         PrRdMachine(cl, addr);
     } else {
         l1Cache_[processNum]->IncMiss();
@@ -171,10 +173,12 @@ void Processor::ProcessorWrite(int processNum, uint64_t addr) {
         PrWrMachine(cl, addr);
     } else if (l2Cache_[processNum]->Probe(addr, &cl)) {
         l1Cache_[processNum]->IncMiss();
+        l1Cache_[processNum]->Put(addr);
         PrWrMachine(cl, addr);
     } else if (l3Cache_->Probe(addr, &cl)) {
         l1Cache_[processNum]->IncMiss();
         l2Cache_[processNum]->IncMiss();
+        l1Cache_[processNum]->Put(addr);
         PrWrMachine(cl, addr);
     } else {
         l1Cache_[processNum]->IncMiss();
@@ -190,8 +194,10 @@ void Processor::OutputCacheMissOneLine(std::ofstream &fs) {
     uint64_t l1Miss = 0, l2Miss = 0, l3Miss = 0;
     for (size_t i = 0; i < l1Cache_.size(); i++) {
         l1Miss += l1Cache_[i]->GetMiss();
+    }
+    for (size_t i = 0; i < l1Cache_.size(); i++) {
         l2Miss += l2Cache_[i]->GetMiss();
     }
-    l3Miss += l3Cache_->GetMiss();
+    l3Miss = l3Cache_->GetMiss();
     fs << l1Miss << " " << l2Miss << " " << l3Miss << "\n";
 }

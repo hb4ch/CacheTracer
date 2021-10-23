@@ -93,12 +93,12 @@ int main(int argc, char **argv) {
             }
             if (op == 'w') {
                 for (size_t i = 0; i < opSize; i++) {
-                    processor.ProcessorRead(threadNum % tc.nCore, addr + i);
+                    processor.ProcessorWrite(threadNum % tc.nCore, addr + i);
                 }
                 processor.OutputCacheMissOneLine(missFileStream);
             } else if (op == 'r') {
                 for (size_t i = 0; i < opSize; i++) {
-                    processor.ProcessorWrite(threadNum % tc.nCore, addr + i);
+                    processor.ProcessorRead(threadNum % tc.nCore, addr + i);
                 }
                 processor.OutputCacheMissOneLine(missFileStream);
             } else {
