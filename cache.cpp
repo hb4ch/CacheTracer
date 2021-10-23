@@ -130,10 +130,17 @@ void Processor::ProcessorRead(int processNum, uint64_t addr) {
     if (l1Cache_[processNum]->Probe(addr, &cl)) {
         PrRdMachine(cl, addr);
     } else if (l2Cache_[processNum]->Probe(addr, &cl)) {
+        l1Cache_[processNum]->IncMiss();
         PrRdMachine(cl, addr);
     } else if (l3Cache_->Probe(addr, &cl)) {
+        l1Cache_[processNum]->IncMiss();
+        l2Cache_[processNum]->IncMiss();
         PrRdMachine(cl, addr);
     } else {
+        l1Cache_[processNum]->IncMiss();
+        l2Cache_[processNum]->IncMiss();
+        l3Cache_->IncMiss();
+
         l1Cache_[processNum]->Read(addr);
     }
     timeStamp_++;
@@ -159,10 +166,17 @@ void Processor::ProcessorWrite(int processNum, uint64_t addr) {
     if (l1Cache_[processNum]->Probe(addr, &cl)) {
         PrWrMachine(cl, addr);
     } else if (l2Cache_[processNum]->Probe(addr, &cl)) {
+        l1Cache_[processNum]->IncMiss();
         PrWrMachine(cl, addr);
     } else if (l3Cache_->Probe(addr, &cl)) {
+        l1Cache_[processNum]->IncMiss();
+        l2Cache_[processNum]->IncMiss();
         PrWrMachine(cl, addr);
     } else {
+        l1Cache_[processNum]->IncMiss();
+        l2Cache_[processNum]->IncMiss();
+        l3Cache_->IncMiss();
+
         l1Cache_[processNum]->Put(addr);
     }
     timeStamp_++;

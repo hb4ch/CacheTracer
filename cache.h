@@ -58,11 +58,14 @@ class Cache {
     SnoopBus *bus_;
     Processor *processor_;
 
+    uint64_t totalMiss;
+    // stats
+
   public:
     Cache(int totalSize, int nWay, int totalSets, int lineSize, int addrLen)
         : totalSize_(totalSize), nWay_(nWay), totalSets_(totalSets),
           lineSize_(lineSize), addrLen_(addrLen), sets(totalSets, nWay),
-          nextLevelCache(nullptr), bus_(nullptr) {
+          nextLevelCache(nullptr), bus_(nullptr), totalMiss(0) {
         totalCacheLines = totalSize / lineSize;
         linesPerWay = totalCacheLines / nWay;
         bitsForOffset = LOG2(lineSize);
@@ -103,6 +106,8 @@ class Cache {
 
     SnoopBus *GetBus() { return bus_; }
     Processor *GetProcessor() { return processor_; }
+
+    void IncMiss() { totalMiss++; }
 };
 
 class Processor {

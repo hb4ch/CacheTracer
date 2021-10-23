@@ -17,6 +17,7 @@ struct TracerConfig {
     // Input
 
     std::string traceFile;
+    std::string missFile;
     // TODO: 继续完善
 };
 // TracerConfig POD
