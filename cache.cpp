@@ -141,6 +141,7 @@ void Cache::Invalidate(uint64_t addr) {
     for (TaggedCacheLine &cl : hitSet.dir) {
         if (GetTag(cl.getTag().addr) == tag) {
             cl.setTag({CacheLineState::INVALID, addr});
+            cl.clearUsedMap();
             return;
         }
     }
