@@ -40,7 +40,7 @@ void Cache::Put(uint64_t addr) {
     // There is no empty slots, now we need to evict least recently used.
     int victimEntry = 0;
     uint32_t leastUsedTime = UINT32_MAX;
-    for (int i = 0; i < hitSet.dir.size(); i++) {
+    for (size_t i = 0; i < hitSet.dir.size(); i++) {
         TaggedCacheLine &cl = hitSet.dir[i];
         if (cl.getLastUseTime() < leastUsedTime) {
             victimEntry = i;

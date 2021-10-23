@@ -6,8 +6,6 @@ constexpr size_t KB = 1024;
 constexpr size_t MB = 1024 * KB;
 constexpr size_t GB = 1024 * MB;
 
-enum class CacheCoherenceProto { MESI, MOSEI, MESIF };
-
 struct TracerConfig {
     int nCore;
     int nWay;
@@ -18,7 +16,6 @@ struct TracerConfig {
     int lineSize;
     // Input
 
-    CacheCoherenceProto cacheCoherenceProto;
     std::string traceFile;
     // TODO: 继续完善
 };

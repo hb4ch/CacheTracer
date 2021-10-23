@@ -38,7 +38,6 @@ struct CacheSet {
 class Cache {
   private:
     size_t totalSize_;
-    CacheCoherenceProto proto_;
     int nWay_;
     int totalSets_;
     size_t lineSize_;
@@ -60,11 +59,10 @@ class Cache {
     Processor *processor_;
 
   public:
-    Cache(int totalSize, CacheCoherenceProto proto, int nWay, int totalSets,
-          int lineSize, int addrLen)
-        : totalSize_(totalSize), lineSize_(lineSize), proto_(proto),
-          nWay_(nWay), totalSets_(totalSets), addrLen_(addrLen),
-          sets(totalSets, nWay), nextLevelCache(nullptr), bus_(nullptr) {
+    Cache(int totalSize, int nWay, int totalSets, int lineSize, int addrLen)
+        : totalSize_(totalSize), nWay_(nWay), totalSets_(totalSets),
+          lineSize_(lineSize), addrLen_(addrLen), sets(totalSets, nWay),
+          nextLevelCache(nullptr), bus_(nullptr) {
         totalCacheLines = totalSize / lineSize;
         linesPerWay = totalCacheLines / nWay;
         bitsForOffset = LOG2(lineSize);

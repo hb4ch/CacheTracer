@@ -30,18 +30,15 @@ int main(int argc, char **argv) {
     size_t l3TotalSets = tc.l3Size / tc.lineSize / tc.nWay;
 
     for (int i = 0; i < tc.nCore; i++) {
-        l1Caches[i] = std::make_shared<Cache>(
-            tc.l1Size, CacheCoherenceProto::MESI, tc.nWay, l1TotalSets,
-            tc.lineSize, tc.addrLen);
-        l2Caches[i] = std::make_shared<Cache>(
-            tc.l2Size, CacheCoherenceProto::MESI, tc.nWay, l2TotalSets,
-            tc.lineSize, tc.addrLen);
+        l1Caches[i] = std::make_shared<Cache>(tc.l1Size, tc.nWay, l1TotalSets,
+                                              tc.lineSize, tc.addrLen);
+        l2Caches[i] = std::make_shared<Cache>(tc.l2Size, tc.nWay, l2TotalSets,
+                                              tc.lineSize, tc.addrLen);
         l1Caches[i]->SetCacheForAllSet();
         l1Caches[i]->SetCacheForAllSet();
     }
     // TODO: pmr
-    Cache l3Cache(tc.l3Size, CacheCoherenceProto::MESI, tc.nWay, l3TotalSets,
-                  tc.lineSize, tc.addrLen);
+    Cache l3Cache(tc.l3Size, tc.nWay, l3TotalSets, tc.lineSize, tc.addrLen);
     l3Cache.SetCacheForAllSet();
     for (int i = 0; i < tc.nCore; i++) {
         l1Caches[i]->setNextLevel(l2Caches[i].get());
@@ -86,10 +83,16 @@ int main(int argc, char **argv) {
             size_t opSize;
             traceStream >> std::dec >> threadNum >> op >> std::hex >> addr >>
                 std::dec >> opSize;
+            if (opSize > 128) {
+                std::cerr << "Invalid op size!" << std::endl;
+                return -1;
+            }
             if (op == 'w') {
-                processor.ProcessorRead(threadNum % tc.nCore, addr);
+                for (size_t i = 0; i < opSize; i++)
+                    processor.ProcessorRead(threadNum % tc.nCore, addr + i);
             } else if (op == 'r') {
-                processor.ProcessorWrite(threadNum % tc.nCore, addr);
+                for (size_t i = 0; i < opSize; i++)
+                    processor.ProcessorWrite(threadNum % tc.nCore, addr + i);
             } else {
                 std::cerr << "Invalid operation type!" << std::endl;
                 return -1;
