@@ -101,6 +101,21 @@ bool Cache::Probe(uint64_t addr, TaggedCacheLine **cl) {
     return false;
 }
 
+bool Cache::ProbeNoStat(uint64_t addr, TaggedCacheLine **cl) {
+    uint64_t tag = GetTag(addr);
+    CacheSet &hitSet = sets.at(GetSet(addr));
+
+    for (TaggedCacheLine &tcl : hitSet.dir) {
+        if (tcl.getTag().state != CacheLineState::INVALID &&
+            GetTag(tcl.getTag().addr) == tag) {
+            *cl = &tcl;
+            return true;
+        }
+    }
+    *cl = nullptr;
+    return false;
+}
+
 void Cache::Invalidate(uint64_t addr) {
     uint64_t tag = GetTag(addr);
     CacheSet &hitSet = sets[GetSet(addr)];
@@ -115,7 +130,9 @@ void Cache::Invalidate(uint64_t addr) {
 
 void Processor::PrRdMachine(TaggedCacheLine *cl, uint64_t addr) {
     if (cl->getTag().state == CacheLineState::INVALID) {
-        if (!bus_->OtherCacheHasValidCopy(cl->getCache(), addr)) {
+        BusRdResp busRdResp;
+        bus_->BusRd(cl->getCache(), addr, busRdResp);
+        if (busRdResp == BusRdResp::HAS_VALID_OTHER_COPY) {
             cl->getTag().state = CacheLineState::SHARED;
         } else {
             cl->getTag().state = CacheLineState::EXCLUSIVE;
@@ -154,14 +171,14 @@ void Processor::ProcessorRead(int processNum, uint64_t addr) {
 
 void Processor::PrWrMachine(TaggedCacheLine *cl, uint64_t addr) {
     if (cl->getTag().state == CacheLineState::INVALID) {
+        bus_->BusRdX(cl->getCache(), addr);
         cl->getTag().state = CacheLineState::MODIFIED;
-        bus_->InvalidOtherCache(cl->getCache(), addr);
         // tell bus to invalidate all other cache;
     } else if (cl->getTag().state == CacheLineState::EXCLUSIVE) {
         cl->getTag().state = CacheLineState::MODIFIED;
     } else if (cl->getTag().state == CacheLineState::SHARED) {
+        bus_->BusRdX(cl->getCache(), addr);
         cl->getTag().state = CacheLineState::MODIFIED;
-        bus_->InvalidOtherCache(cl->getCache(), addr);
     } else if (cl->getTag().state == CacheLineState::MODIFIED) {
         // do nothing
     }

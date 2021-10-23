@@ -17,6 +17,8 @@ struct CacheSet;
 class Cache;
 class SnoopBus;
 
+enum class BusRdResp { HAS_VALID_OTHER_COPY, HAS_NO_VALID_OTHER_COPY };
+
 struct CacheSet {
     int nWay;
     std::vector<TaggedCacheLine> dir;
@@ -88,6 +90,7 @@ class Cache {
     void Put(uint64_t addr);
     void Read(uint64_t addr);
     bool Probe(uint64_t addr, TaggedCacheLine **cl);
+    bool ProbeNoStat(uint64_t addr, TaggedCacheLine **cl);
     void Invalidate(uint64_t addr);
 
     uint64_t GetOffset(uint64_t addr) {
@@ -163,5 +166,8 @@ class SnoopBus {
     }
     bool OtherCacheHasValidCopy(Cache *selfCache, uint64_t addr);
     void InvalidOtherCache(Cache *selfCache, uint64_t addr);
+    void BusRd(Cache *selfCache, uint64_t addr, BusRdResp &resp);
+    void BusRdX(Cache *selfCache, uint64_t addr);
+    void BusUpdr(Cache *selfCache, uint64_t addr);
     void UpdateBlock(uint64_t addr);
 };
