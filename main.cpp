@@ -119,6 +119,7 @@ int main(int argc, char **argv) {
     }
     processor.DumpLeftCacheLines(evictFileStream);
     missFileStream.flush();
+    evictFileStream.flush();
     fflush(stdout);
 
     return 0;
